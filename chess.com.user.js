@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chess.com
-// @namespace    http://tampermonkey.net/
-// @version      0.2
+// @namespace    http://www.chess.com
+// @version      0.1
 // @description  chess.com ai bot
 // @author       You
 // @match        https://www.chess.com/game/*
@@ -47,11 +47,12 @@ async function getFen() {
         "halfmoveClock": 0,
         "fullmoveNumber": document.getElementsByClassName("vertical-move-list")[0].childElementCount
     }
+    if (document.getElementsByClassName("board")[0].className.includes("flipped") && darwins.table.activeColor == "w") return
+    if (!document.getElementsByClassName("board")[0].className.includes("flipped") && darwins.table.activeColor == "b") return
     for (let piece of darwins.pieces) {
-     if (piece.classList[2].length == 2) {
-         piece.className = piece.classList[0] + " " + piece.classList[2] + " " + piece.classList[1]
-         console.log(piece.className)
-     }
+        if (piece.classList[2].length == 2) {
+            piece.className = piece.classList[0] + " " + piece.classList[2] + " " + piece.classList[1]
+        }
     }
     for (let piece of darwins.pieces) {
         var num
@@ -111,10 +112,7 @@ async function getFen() {
         fen += jsonTable.halfmoveClock + " " + jsonTable.fullmoveNumber;
         return fen;
     }
-    console.log(darwins.table)
     var res = await makeRequest("GET", "http://127.0.0.1:8000/chess?fen=" + jsonToFen(darwins.table))
-    console.log(res)
-    console.log(darwins.table)
     var [highlight1, highlight2] = document.getElementsByClassName("darwins")
     var letters = ["a", "b", "c", "d", "e", "f", "g", "h"]
     res = JSON.parse(res).msg
@@ -124,8 +122,5 @@ async function getFen() {
     res[1].Move = res[1].Move.replace(res[1].Move.charAt(2), letters.indexOf(res[1].Move.charAt(2)) + 1)
     highlight1.className = "darwins highlight square-" + res[0].Move.substr(0,2)
     highlight2.className = "darwins highlight square-" + res[0].Move.substr(2,3)
-    highlight1.innerText = res[0].Centipawn
-    highlight2.innerText = res[0].Centipawn
-    console.log(highlight1, highlight2, res)
-    console.log(jsonToFen(darwins.table))
+    highlight2.innerText = res[0].Centipawn / 100
 }
