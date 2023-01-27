@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chess.com
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  chess.com ai bot
 // @author       You
 // @match        https://www.chess.com/game/*
