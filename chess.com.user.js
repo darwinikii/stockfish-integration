@@ -2,7 +2,7 @@
 // @name         chess.com
 // @namespace    http://www.chess.com
 // @version      0.4
-// @description  chess.com ai bot
+// @description  chess.com stockfish integration
 // @author       darwinikii
 // @match        https://www.chess.com/game/*
 // @match        https://www.chess.com/play/computer
