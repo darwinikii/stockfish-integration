@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         chess.com
 // @namespace    http://www.chess.com
-// @version      0.1
+// @version      0.3
 // @description  chess.com ai bot
 // @author       You
 // @match        https://www.chess.com/game/*
 // @match        https://www.chess.com/play/computer
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=chess.com
+// @updateURL    https://github.com/darwinikii/stockfish-integration/raw/main/chess.com.user.js
+// @downloadURL  https://github.com/darwinikii/stockfish-integration/raw/main/chess.com.user.js
 // @grant GM_setValue
 // @grant GM_getValue
 // ==/UserScript==
