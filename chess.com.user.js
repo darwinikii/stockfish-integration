@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chess.com
 // @namespace    http://www.chess.com
-// @version      0.4
+// @version      0.5
 // @description  chess.com stockfish integration
 // @author       darwinikii
 // @match        https://www.chess.com/game/*
@@ -215,11 +215,12 @@ async function getFen() {
     var letters = ["a", "b", "c", "d", "e", "f", "g", "h"]
     res = JSON.parse(res).msg
     console.log(res)
+    if (res[0].Move.length == 5) res[0].Move = res[0].Move.substr(0, 4)
     res[0].Move = res[0].Move.replace(res[0].Move.charAt(0), letters.indexOf(res[0].Move.charAt(0)) + 1)
     res[0].Move = res[0].Move.replace(res[0].Move.charAt(2), letters.indexOf(res[0].Move.charAt(2)) + 1)
     highlight1.className = "darwins highlight square-" + res[0].Move.substr(0,2)
     highlight2.className = "darwins highlight square-" + res[0].Move.substr(2,3)
-    highlight2.innerText = ((res[0].Centipawn == null ? 0 : res[0].Centipawn) / 100).toString() + (res[0].Mate ? " - Mate" : "")
+    highlight2.innerText = ((res[0].Centipawn == null ? 0 : res[0].Centipawn) / 100).toString() + "P" + (res[0].Mate ? "\nMate" : "")
     highlight1.style.opacity = 0.5
     highlight2.style.opacity = 0.5
     if (isAlternative) {
@@ -227,7 +228,7 @@ async function getFen() {
         res[1].Move = res[1].Move.replace(res[1].Move.charAt(2), letters.indexOf(res[1].Move.charAt(2)) + 1)
         highlight4.className = "darwins highlight square-" + res[1].Move.substr(0,2)
         highlight3.className = "darwins highlight square-" + res[1].Move.substr(2,3)
-        highlight3.innerText = (res[0].Centipawn / 100).toString() + " - Alternative"
+        highlight3.innerText = (res[0].Centipawn / 100).toString() + "P" + "\nAlternative" + (res[0].Mate ? "\nMate" : "")
         highlight4.style.opacity = 0.5
         highlight3.style.opacity = 0.5
     }
