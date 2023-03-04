@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chess.com
 // @namespace    http://www.chess.com
-// @version      0.5
+// @version      0.6
 // @description  chess.com stockfish integration
 // @author       darwinikii
 // @match        https://www.chess.com/game/*
@@ -9,12 +9,17 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=chess.com
 // @updateURL    https://github.com/darwinikii/stockfish-integration/raw/main/chess.com.user.js
 // @downloadURL  https://github.com/darwinikii/stockfish-integration/raw/main/chess.com.user.js
+// @require      https://cdn.socket.io/4.6.0/socket.io.min.js
 // @grant GM_setValue
 // @grant GM_getValue
 // ==/UserScript==
 
+var socket
+
 (async function() {
     'use strict';
+    socket = io("http://localhost:8000/")
+    console.log(socket)
     function delay(time) {
         return new Promise(resolve => setTimeout(resolve, time));
     }
@@ -157,28 +162,16 @@ async function getFen() {
         darwins.table[num.charAt(1)][num.charAt(0) - 1] = piece.classList[1].charAt(0) == "w" ? piece.classList[1].charAt(1).toUpperCase() : piece.classList[1].charAt(1).toLowerCase()
     }
 
-    function makeRequest(method, url) {
-        return new Promise(function (resolve, reject) {
-            let xhr = new XMLHttpRequest();
-            xhr.open(method, url);
-            xhr.onload = function () {
-                if (this.status >= 200 && this.status < 300) {
-                    resolve(xhr.response);
-                } else {
-                    reject({
-                        status: this.status,
-                        statusText: xhr.statusText
-                    });
-                }
-            };
-            xhr.onerror = function () {
-                reject({
-                    status: this.status,
-                    statusText: xhr.statusText
-                });
-            };
-            xhr.send();
-        });
+    function getELO() {
+        var n = 0
+        var elo = 0
+        for (elm of document.getElementsByClassName("user-tagline-rating user-tagline-white")) {
+            n++
+            elo = elo + Number(elm.innerText.match(/\d/g).join(""))
+        }
+        if (n == 0) return 1000
+        elo = elo / n * 1.5
+        return elo
     }
 
     function jsonToFen(jsonTable) {
@@ -210,26 +203,31 @@ async function getFen() {
         console.log(fen)
         return fen;
     }
-    var res = await makeRequest("GET", "http://127.0.0.1:8000/chess?fen=" + jsonToFen(darwins.table) + "&isAlternative=" + isAlternative.toString())
-    var [highlight1, highlight2, highlight3, highlight4] = document.getElementsByClassName("darwins")
-    var letters = ["a", "b", "c", "d", "e", "f", "g", "h"]
-    res = JSON.parse(res).msg
-    console.log(res)
-    if (res[0].Move.length == 5) res[0].Move = res[0].Move.substr(0, 4)
-    res[0].Move = res[0].Move.replace(res[0].Move.charAt(0), letters.indexOf(res[0].Move.charAt(0)) + 1)
-    res[0].Move = res[0].Move.replace(res[0].Move.charAt(2), letters.indexOf(res[0].Move.charAt(2)) + 1)
-    highlight1.className = "darwins highlight square-" + res[0].Move.substr(0,2)
-    highlight2.className = "darwins highlight square-" + res[0].Move.substr(2,3)
-    highlight2.innerText = ((res[0].Centipawn == null ? 0 : res[0].Centipawn) / 100).toString() + "P" + (res[0].Mate ? "\nMate" : "")
-    highlight1.style.opacity = 0.5
-    highlight2.style.opacity = 0.5
-    if (isAlternative) {
-        res[1].Move = res[1].Move.replace(res[1].Move.charAt(0), letters.indexOf(res[1].Move.charAt(0)) + 1)
-        res[1].Move = res[1].Move.replace(res[1].Move.charAt(2), letters.indexOf(res[1].Move.charAt(2)) + 1)
-        highlight4.className = "darwins highlight square-" + res[1].Move.substr(0,2)
-        highlight3.className = "darwins highlight square-" + res[1].Move.substr(2,3)
-        highlight3.innerText = (res[0].Centipawn / 100).toString() + "P" + "\nAlternative" + (res[0].Mate ? "\nMate" : "")
-        highlight4.style.opacity = 0.5
-        highlight3.style.opacity = 0.5
-    }
+    socket.emit("chess", { fen: jsonToFen(darwins.table), isAlternative: isAlternative.toString(), Elo: getELO()}, async function(res) {
+        console.log(res)
+        var [highlight1, highlight2, highlight3, highlight4] = document.getElementsByClassName("darwins")
+        var letters = ["a", "b", "c", "d", "e", "f", "g", "h"]
+        if (res[0].Move.length == 5) res[0].Move = res[0].Move.substr(0, 4)
+        res[0].Move = res[0].Move.replace(res[0].Move.charAt(0), letters.indexOf(res[0].Move.charAt(0)) + 1)
+        res[0].Move = res[0].Move.replace(res[0].Move.charAt(2), letters.indexOf(res[0].Move.charAt(2)) + 1)
+        res[0].Centipawn = Math.abs(res[0].Centipawn)
+        highlight1.className = "darwins highlight square-" + res[0].Move.substr(0,2)
+        highlight2.className = "darwins highlight square-" + res[0].Move.substr(2,3)
+        highlight2.innerText = res[0].Centipawn == null ? "" : (res[0].Centipawn / 100).toString() + "P"
+        highlight2.innerText += res[0].Mate ? "\nMate: " + Math.abs(res[0].Mate): ""
+        highlight1.style.opacity = 0.5
+        highlight2.style.opacity = 0.5
+        if (isAlternative) {
+            res[1].Move = res[1].Move.replace(res[1].Move.charAt(0), letters.indexOf(res[1].Move.charAt(0)) + 1)
+            res[1].Move = res[1].Move.replace(res[1].Move.charAt(2), letters.indexOf(res[1].Move.charAt(2)) + 1)
+            res[1].Centipawn = Math.abs(res[1].Centipawn)
+            highlight4.className = "darwins highlight square-" + res[1].Move.substr(0,2)
+            highlight3.className = "darwins highlight square-" + res[1].Move.substr(2,3)
+            highlight3.innerText = res[1].Centipawn == null ? "" : (res[1].Centipawn / 100).toString() + "P"
+            highlight3.innerText += res[1].Mate ? "\nMate: " + Math.abs(res[0].Mate): ""
+            highlight3.innerText += "\nAlternative"
+            highlight4.style.opacity = 0.5
+            highlight3.style.opacity = 0.5
+        }
+    })
 }
