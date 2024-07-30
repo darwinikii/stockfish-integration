@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chess.com
 // @namespace    http://www.chess.com
-// @version      0.6
+// @version      0.7
 // @description  chess.com stockfish integration
 // @author       darwinikii
 // @match        https://www.chess.com/game/*
@@ -56,6 +56,7 @@ var socket
     } else {
         GM_setValue("bk", true)
     }
+
     var board = document.getElementsByClassName("board")[0]
     var highlight1 = document.createElement("div")
     highlight1.className = "darwins highlight square-18"
@@ -78,7 +79,8 @@ var socket
     btn.className = GM_getValue("alternativeMove", false) ? "darwins-btn ui_v5-button-component ui_v5-button-primary" : "darwins-btn ui_v5-button-component ui_v5-button-basic"
     btn.innerText = "Show alternative moves"
     btn.style = "margin-left: 190px; height: 40px;"
-    document.getElementsByClassName("player-component")[1].appendChild(btn)
+    document.getElementsByClassName("player-row-component")[1].appendChild(btn)
+
     btn.addEventListener("click", function() {
         var data = GM_getValue("alternativeMove", false);
         if (data == false) {
@@ -93,6 +95,7 @@ var socket
 })();
 
 async function getFen() {
+    console.log("runned");
     var darwins = {}
     darwins.pieces = document.getElementsByClassName("piece")
     if (!document.getElementsByClassName("selected")[0]) {
@@ -116,18 +119,20 @@ async function getFen() {
         "castling": "",
         "enPassant": "-",
         "halfmoveClock": 0,
-        "fullmoveNumber": document.getElementsByClassName("vertical-move-list")[0].childElementCount
+        "fullmoveNumber": document.getElementsByClassName("play-controller-moveList")[0].childElementCount
     }
     if (darwins.table.activeColor == "w") {
-        if (document.getElementsByClassName("square-81")[0] && !document.getElementsByClassName("square-81")[0].className.includes("wr")) GM_setValue("wr81", true)
-        if (document.getElementsByClassName("square-11")[0] && !document.getElementsByClassName("square-11")[0].className.includes("wr")) GM_setValue("wr11", true)
-        if (document.getElementsByClassName("square-51")[0] && !document.getElementsByClassName("square-51")[0].className.includes("wk")) GM_setValue("wk", true)
+        
     }
     if (darwins.table.activeColor == "b") {
-        if (document.getElementsByClassName("square-88")[0] && !document.getElementsByClassName("square-88")[0].className.includes("br")) GM_setValue("br88", true)
-        if (document.getElementsByClassName("square-18")[0] && !document.getElementsByClassName("square-18")[0].className.includes("br")) GM_setValue("br18", true)
-        if (document.getElementsByClassName("square-58")[0] && !document.getElementsByClassName("square-58")[0].className.includes("bk")) GM_setValue("bk", true)
+        
     }
+    if (document.getElementsByClassName("square-81")[0] && !document.getElementsByClassName("square-81")[0].className.includes("wr")) GM_setValue("wr81", true)
+    if (document.getElementsByClassName("square-11")[0] && !document.getElementsByClassName("square-11")[0].className.includes("wr")) GM_setValue("wr11", true)
+    if (document.getElementsByClassName("square-51")[0] && !document.getElementsByClassName("square-51")[0].className.includes("wk")) GM_setValue("wk", true)
+    if (document.getElementsByClassName("square-88")[0] && !document.getElementsByClassName("square-88")[0].className.includes("br")) GM_setValue("br88", true)
+    if (document.getElementsByClassName("square-18")[0] && !document.getElementsByClassName("square-18")[0].className.includes("br")) GM_setValue("br18", true)
+    if (document.getElementsByClassName("square-58")[0] && !document.getElementsByClassName("square-58")[0].className.includes("bk")) GM_setValue("bk", true)
     if (!GM_getValue("wr81", false)) castlingsWhite += "K"
     if (!GM_getValue("wr11", false)) castlingsWhite += "Q"
     if (!GM_getValue("br88", false)) castlingsBlack += "k"
